@@ -7,6 +7,21 @@ import requests as http_requests
 from PIL import Image
 
 
+def _make_video_output(path: str):
+    """Wrap video path as ComfyUI VIDEO type for SaveVideo compatibility."""
+    try:
+        from comfy_api.input_impl import VideoFromFile
+        return VideoFromFile(path)
+    except ImportError:
+        pass
+    try:
+        from comfy_api.latest._input_impl import VideoFromFile
+        return VideoFromFile(path)
+    except (ImportError, AttributeError):
+        pass
+    return path
+
+
 class FabricTextToVideo:
     """Generates a talking-head video from an image and text using VEED Fabric 1.0 via fal.ai."""
 
@@ -36,8 +51,8 @@ class FabricTextToVideo:
             },
         }
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("video_path",)
+    RETURN_TYPES = ("VIDEO",)
+    RETURN_NAMES = ("video",)
     OUTPUT_NODE = True
     CATEGORY = "VEED Fabric 1.0"
     FUNCTION = "execute"
@@ -94,4 +109,4 @@ class FabricTextToVideo:
         with open(output_path, "wb") as f:
             f.write(response.content)
 
-        return (output_path,)
+        return (_make_video_output(output_path),)

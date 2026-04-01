@@ -8,6 +8,21 @@ import soundfile as sf
 from PIL import Image
 
 
+def _make_video_output(path: str):
+    """Wrap video path as ComfyUI VIDEO type for SaveVideo compatibility."""
+    try:
+        from comfy_api.input_impl import VideoFromFile
+        return VideoFromFile(path)
+    except ImportError:
+        pass
+    try:
+        from comfy_api.latest._input_impl import VideoFromFile
+        return VideoFromFile(path)
+    except (ImportError, AttributeError):
+        pass
+    return path
+
+
 class FabricLipsync:
     """Generates a lipsync video from an image and audio using VEED Fabric 1.0 via fal.ai."""
 
@@ -25,8 +40,8 @@ class FabricLipsync:
             },
         }
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("video_path",)
+    RETURN_TYPES = ("VIDEO",)
+    RETURN_NAMES = ("video",)
     OUTPUT_NODE = True
     CATEGORY = "VEED Fabric 1.0"
     FUNCTION = "execute"
@@ -87,4 +102,4 @@ class FabricLipsync:
         with open(output_path, "wb") as f:
             f.write(response.content)
 
-        return (output_path,)
+        return (_make_video_output(output_path),)
